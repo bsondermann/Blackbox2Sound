@@ -1,2 +1,2 @@
 # Blackbox2Sound
- Hear the gyro data of you quad
+ Hear the gyro data of your quad

@@ -3,27 +3,24 @@ import drop.*;
 import java.nio.file.Files;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
-AudioSample samplef,sampleu;
+SoundManager sound;
 SDrop drop;
 File[] logs;
-RamTable table;
-boolean filtered=true;
 PImage istop,iplay;
 int sel=0;
-boolean playing=false;
 int dt=0;
 float time;
-float vol=1;
+float vol=0.2;
 float dur;
-String text="NO FILE LOADED!";
+String filename="NO FILE LOADED!";
 float rate;
 void setup() {
   size(640, 360);
-  
+  sound = new SoundManager(this);
   drop = new SDrop(this);
   istop=loadImage(sketchPath()+"/assets/stop.png");
   iplay=loadImage(sketchPath()+"/assets/play.png");
-  
+  time=millis();
   background(50);
   clearTemp();
   // Create an array and manually write a single sine wave oscillation into it.
@@ -31,47 +28,47 @@ void setup() {
 }      
 
 void draw() {
-  float pos =1;
-  if(samplef!=null){
-    pos=samplef.duration();
-  }
+  
+  
+  rectMode(CENTER);
   background(50);
+  if(!filename.equals("NO FILE LOADED!")&&!filename.equals("LOADING FILE...")){
+    float pos=sound.getDuration();
   if(sel!=0){
     if(sel==1){
       time = map(constrain(mouseX,50,width-50),50,width-50,0,pos);
-      if(samplef!=null){
-        samplef.jump(time);
-        sampleu.jump(time);
-        playing = true;
-      }
+      sound.jump(time);
     }else if(sel==2){
       vol = map(constrain(mouseY,50,height-50),50,height-50,1,0);
-      if(samplef!=null){
-      if(filtered){
-      samplef.amp(vol);
-      sampleu.amp(0);
-    }else{
-      sampleu.amp(vol);
-      samplef.amp(0);
-    }
-      }
+      sound.applyVolumes();
     }
   }
   noStroke();
-  rectMode(CENTER);
   fill(100);
   rect(20,height-20,25,25);
   stroke(0);
-  if(filtered){
+  
+  fill(100);
+  rect(70,150,30,15);
+  //FILTER CHECK BOX
   fill(255,0,0);
+  if(sound.getFilterActive()){
+    rect(62.5,150,15,15);
   }else{
-    fill(100);
+    rect(77.5,150,15,15);
   }
-  rect(20,150,15,15);
+  //ROLL CHECK BOX
+  if(sound.getActive("ROLL")){fill(255,0,0);}else{fill(100);}
+  rect(20,200,15,15);
+  if(sound.getActive("PITCH")){fill(255,0,0);}else{fill(100);}
+  rect(70,200,15,15);
+  if(sound.getActive("YAW")){fill(255,0,0);}else{fill(100);}
+  rect(120,200,15,15);
+  
   noStroke();
   fill(255);
   imageMode(CENTER);
-  if(playing){
+  if(sound.getPlaying()){
     image(istop,20,height-20,20,20);
   }else{
     image(iplay,20,height-20,20,20);
@@ -82,84 +79,58 @@ void draw() {
   
   rect(map(time,0,pos,50,width-50),height-20,10,30);
   rect(width-20,map(vol,0,1,height-50,50),30,10);
+  
+  fill(0);
+  textSize(15);
+  text("roll | pitch | yaw",70,220);
+  
+  text("Vol: "+String.format("%.1f",vol),width-30,20);
+  text("   filtered | unfiltered",70,168);
+  text(sound.getTimeCode(),width/2,height-60);
+  sound.show();
+  if(sound.getPlaying()){
+    time+=(float(millis())-dt)/1000;
+    dt=millis();
+    if(time>sound.getDuration()){
+      sound.stopSample();
+      time=0;
+    }
+  }}
+  
+  
+  
   fill(100);
   stroke(0);
   rect(width/2,75,400,50);
   textAlign(CENTER,CENTER);
   fill(0);
   textSize(30);
-  text(text,width/2,70);
-  textSize(15);
-  text("Vol: "+String.format("%.1f",vol),width-30,20);
-  text("filtered / unfiltered",100,147);
-  String sec1="0";
-  String sec2="00";
-  String sec21="0:";
+  text(filename,width/2,70);
   
-  if(samplef!=null){
-        if(int(samplef.duration())%60<10){sec2="0"+int(samplef.duration())%60;}else{sec2=int(samplef.duration())%60+"";}
-        sec21=int(samplef.duration())/60+":";
-  }
   
-  if(time%60<10){sec1="0"+int(time)%60;}else{sec1=int(time)%60+"";}
-  text(int(time)/60+":"+sec1+"    |    "+sec21+sec2,width/2,height-60);
-  if(playing){
-    time+=(float(millis())-dt)/1000;
-    dt=millis();
-    if(time>samplef.duration()){
-      playing=false;
-      samplef.amp(0);
-      sampleu.amp(0);
-      
-      time=0;
-    }
-  }
 }
 void mousePressed(){
-  float pos =1;
-  if(samplef!=null){
-    pos=samplef.duration();
-  }
+  float pos=sound.getDuration();
+  
   if(mouseX>map(time,0,pos,50,width-50)-5&&mouseX<map(time,0,pos,50,width-50)+5&&mouseY>height-35&&mouseY<height-5){
     sel=1;
-    if(samplef!=null){
-      playing=false;
-      samplef.pause();
-      sampleu.pause();
-    }
+    sound.pause();
   }
   if(mouseX>width-35&&mouseX<width-5&&mouseY>map(vol,0,1,height-50,50)-5&&mouseY<map(vol,0,1,height-50,50)+5){sel=2;}
   if(mouseX>10&&mouseX<30&&mouseY>height-30&&mouseY<height-10){
-    if(samplef!=null){
-      if(playing){
-        samplef.pause();
-        sampleu.pause();
-        playing=false;
-      }else{
-        if(filtered){
-      samplef.amp(vol);
-      sampleu.amp(0);
+    
+    if(sound.getPlaying()){
+      sound.pause();
     }else{
-      sampleu.amp(vol);
-      samplef.amp(0);
-    }
-        samplef.play();
-        sampleu.play();
-        dt=millis();
-        playing=true;
-      }
+      sound.resume();  
     }
   }
-  if(mouseX>12&&mouseX<28&&mouseY>142&&mouseY<158){
-    filtered=!filtered;
-    if(filtered){
-      samplef.amp(vol);
-      sampleu.amp(0);
-    }else{
-      sampleu.amp(vol);
-      samplef.amp(0);
-    }
+  if(mouseX>55&&mouseX<85&&mouseY>142&&mouseY<158){
+    sound.toggleFiltered();
   }
+  if(mouseX>12&&mouseX<28&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("ROLL"),"ROLL");}
+  if(mouseX>12+50&&mouseX<28+50&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("PITCH"),"PITCH");}
+  if(mouseX>12+100&&mouseX<28+100&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("YAW"),"YAW");}
 }
 
 void mouseReleased(){
@@ -169,7 +140,7 @@ void dropEvent(DropEvent e){
   if(e.isFile()){
     File f = e.file();
     if(!f.isDirectory()){
-      text="LOADING FILE...";
+      filename="LOADING FILE...";
       createImage(1, 1, RGB).save(sketchPath()+"/temp/0/csv/temp.png");
       new File(sketchPath()+"/temp/0/csv/temp.png").delete();
       ProcessBuilder pb;
@@ -190,30 +161,8 @@ void dropEvent(DropEvent e){
       }
 
         logs = getLogs(f);
-        table = new RamTable(logs[0].getAbsolutePath());
-        dur=Long.parseLong(table.getRow(table.getRowCount()-1).getString(1).trim())-Long.parseLong(table.getRow(1).getString(1).trim());
-        rate = Math.round(table.getRowCount()/(dur/1000000)/1000);
-  float[] vfiltered = new float[table.getRowCount()-2];
-  for (int i = 0; i < vfiltered.length; i++) {
-    vfiltered[i] =float(Integer.parseInt(table.getRow(i+1).getString(25).trim())+Integer.parseInt(table.getRow(i+1).getString(26).trim())+Integer.parseInt(table.getRow(i+1).getString(27).trim()))/1000;
-  }
-  float[] unfiltered = new float[table.getRowCount()-2];
-  for (int i = 0; i < unfiltered.length; i++) {
-    unfiltered[i] =float(Integer.parseInt(table.getRow(i+1).getString(31).trim())+Integer.parseInt(table.getRow(i+1).getString(32).trim())+Integer.parseInt(table.getRow(i+1).getString(33).trim()))/1000;
-  }
-  // Create the audiosample based on the data, set framerate to play 200 oscillations/second
-  samplef = new AudioSample(this, vfiltered, (int)rate*1000);
-  sampleu = new AudioSample(this, unfiltered, (int)rate*1000);
-
-  // Play the sample in a loop (but don't make it too loud)
-  if(filtered){
-      samplef.amp(vol);
-      sampleu.amp(0);
-    }else{
-      sampleu.amp(vol);
-      samplef.amp(0);
-    }
-  text=logs[0].getName().substring(0,logs[0].getName().length()-7)+" LOADED!";
+        sound.loadLog(logs[0]);
+        filename=logs[0].getName().substring(0,logs[0].getName().length()-7)+" LOADED!";
       }catch(Exception ex) {
         ex.printStackTrace();
       }
@@ -259,7 +208,7 @@ void deleteDir(File file) {
 }
 
 void exit(){
-
+  try{sound.pause();}catch(Exception e){}
   surface.setVisible(false);
   delay(2000);
   clearTemp();

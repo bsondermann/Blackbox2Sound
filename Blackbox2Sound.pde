@@ -3,28 +3,28 @@ import drop.*;
 import java.nio.file.Files;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
+import javax.sound.sampled.*;
+import java.io.*;
+ 
 SoundManager sound;
 SDrop drop;
 File[] logs;
 PImage istop,iplay;
 int sel=0;
-int dt=0;
-float time;
 float vol=0.2;
 float dur;
 String filename="NO FILE LOADED!";
 float rate;
 void setup() {
-  size(640, 360);
+  size(1280, 720);
   sound = new SoundManager(this);
   drop = new SDrop(this);
   istop=loadImage(sketchPath()+"/assets/stop.png");
   iplay=loadImage(sketchPath()+"/assets/play.png");
-  time=millis();
   background(50);
   clearTemp();
   // Create an array and manually write a single sine wave oscillation into it.
-  dt=millis();
+;
 }      
 
 void draw() {
@@ -33,11 +33,9 @@ void draw() {
   rectMode(CENTER);
   background(50);
   if(!filename.equals("NO FILE LOADED!")&&!filename.equals("LOADING FILE...")){
-    float pos=sound.getDuration();
   if(sel!=0){
     if(sel==1){
-      time = map(constrain(mouseX,50,width-50),50,width-50,0,pos);
-      sound.jump(time);
+      sound.jump(map(constrain(mouseX,50,width-50),50,width-50,0,sound.getDuration()));
     }else if(sel==2){
       vol = map(constrain(mouseY,50,height-50),50,height-50,1,0);
       sound.applyVolumes();
@@ -49,6 +47,7 @@ void draw() {
   stroke(0);
   
   fill(100);
+  //rect(70,300,120,25);
   rect(70,150,30,15);
   //FILTER CHECK BOX
   fill(255,0,0);
@@ -56,6 +55,15 @@ void draw() {
     rect(62.5,150,15,15);
   }else{
     rect(77.5,150,15,15);
+  }
+  fill(100);
+  rect(70,250,30,15);
+  //GYRO CHECK BOX
+  fill(255,0,0);
+  if(sound.getGyro()){
+    rect(62.5,250,15,15);
+  }else{
+    rect(77.5,250,15,15);
   }
   //ROLL CHECK BOX
   if(sound.getActive("ROLL")){fill(255,0,0);}else{fill(100);}
@@ -77,27 +85,30 @@ void draw() {
   rect(width-20,height/2,10,height-100);
   fill(255,0,0);
   
-  rect(map(time,0,pos,50,width-50),height-20,10,30);
+  rect(map(sound.getPosition(),0,sound.getDuration(),50,width-50),height-20,10,30);
   rect(width-20,map(vol,0,1,height-50,50),30,10);
   
   fill(0);
   textSize(15);
-  text("roll | pitch | yaw",70,220);
+  text("Roll | Pitch | Yaw",70,220);
   
-  text("Vol: "+String.format("%.1f",vol),width-30,20);
-  text("   filtered | unfiltered",70,168);
+  text("Vol: "+String.format("%.1f",vol),width-30,15);
+  text("R | P | Y",width-85,35);
+  text("   Filtered | Unfiltered",70,168);
+  text("   Gyro | DTerm",70,268);
+  //text("Export Sound",70,297);
   text(sound.getTimeCode(),width/2,height-60);
   sound.show();
   if(sound.getPlaying()){
-    time+=(float(millis())-dt)/1000;
-    dt=millis();
-    if(time>sound.getDuration()){
-      sound.stopSample();
-      time=0;
+    if(sound.getPosition()+0.1>sound.getDuration()){
+      sound.cue(0);
     }
-  }}
+  }
   
+
+  }
   
+  rectMode(CENTER);
   
   fill(100);
   stroke(0);
@@ -107,12 +118,11 @@ void draw() {
   textSize(30);
   text(filename,width/2,70);
   
-  
 }
 void mousePressed(){
   float pos=sound.getDuration();
   
-  if(mouseX>map(time,0,pos,50,width-50)-5&&mouseX<map(time,0,pos,50,width-50)+5&&mouseY>height-35&&mouseY<height-5){
+  if(mouseX>map(sound.getPosition(),0,pos,50,width-50)-5&&mouseX<map(sound.getPosition(),0,pos,50,width-50)+5&&mouseY>height-35&&mouseY<height-5){
     sel=1;
     sound.pause();
   }
@@ -124,9 +134,16 @@ void mousePressed(){
     }else{
       sound.resume();  
     }
+    sound.applyVolumes();
   }
   if(mouseX>55&&mouseX<85&&mouseY>142&&mouseY<158){
     sound.toggleFiltered();
+  }
+  if(mouseX>55&&mouseX<85&&mouseY>242&&mouseY<258){
+    sound.setGyro(!sound.getGyro());
+  }
+  if(mouseX>10&&mouseX<130&&mouseY>288&&mouseY<312){
+    //sound.exportSound();
   }
   if(mouseX>12&&mouseX<28&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("ROLL"),"ROLL");}
   if(mouseX>12+50&&mouseX<28+50&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("PITCH"),"PITCH");}
@@ -134,6 +151,7 @@ void mousePressed(){
 }
 
 void mouseReleased(){
+  if(sel==1){sound.applyVolumes();}
   sel=0;
 }
 void dropEvent(DropEvent e){

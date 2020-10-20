@@ -15,6 +15,7 @@ float vol=0.2;
 float dur;
 String filename="NO FILE LOADED!";
 float rate;
+LogSelector ls;
 void setup() {
   size(1280, 720);
   sound = new SoundManager(this);
@@ -23,8 +24,7 @@ void setup() {
   iplay=loadImage(sketchPath()+"/assets/play.png");
   background(50);
   clearTemp();
-  // Create an array and manually write a single sine wave oscillation into it.
-;
+  ls=new LogSelector(20,20);
 }      
 
 void draw() {
@@ -41,6 +41,8 @@ void draw() {
       sound.applyVolumes();
     }
   }
+  ls.show();
+  rectMode(CENTER);
   noStroke();
   fill(100);
   rect(20,height-20,25,25);
@@ -148,6 +150,10 @@ void mousePressed(){
   if(mouseX>12&&mouseX<28&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("ROLL"),"ROLL");}
   if(mouseX>12+50&&mouseX<28+50&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("PITCH"),"PITCH");}
   if(mouseX>12+100&&mouseX<28+100&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("YAW"),"YAW");}
+  if(ls.click(mouseX,mouseY)){
+        sound.loadLog(logs[ls.getCurrentLog()]);
+        filename=logs[ls.getCurrentLog()].getName().substring(0,logs[0].getName().length()-7)+" LOADED!";
+      }
 }
 
 void mouseReleased(){
@@ -179,8 +185,9 @@ void dropEvent(DropEvent e){
       }
 
         logs = getLogs(f);
-        sound.loadLog(logs[0]);
-        filename=logs[0].getName().substring(0,logs[0].getName().length()-7)+" LOADED!";
+        ls.setNumlogs(logs.length);
+        sound.loadLog(logs[ls.getCurrentLog()]);
+        filename=logs[ls.getCurrentLog()].getName().substring(0,logs[0].getName().length()-7)+" LOADED!";
       }catch(Exception ex) {
         ex.printStackTrace();
       }

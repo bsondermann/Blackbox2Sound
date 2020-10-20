@@ -4,4 +4,5 @@ class RamTableRow{
     content = row.split(",");
   }
   String getString(int index){return content[index];}
+  int getLength(){return content.length;}
 }

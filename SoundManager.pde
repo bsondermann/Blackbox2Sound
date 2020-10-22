@@ -85,7 +85,8 @@ class SoundManager {
     table = new RamTable(log.getAbsolutePath());
     if(table.getRowCount()>2){
     dur=Long.parseLong(table.getRow(table.getRowCount()-1).getString(1).trim())-Long.parseLong(table.getRow(1).getString(1).trim());
-    rate = Math.round(table.getRowCount()/(dur/1000000)/1000);
+
+    rate=(float(table.getRowCount())-1)/(dur/1000000);
     int[]indexes = new int[8];
     for(int i = 0; i< table.getRow(0).getLength();i++){
       if(table.getRow(0).getString(i).contains("axisD[0]")){indexes[0]=i;}
@@ -136,14 +137,14 @@ class SoundManager {
     }
 
     roll=pitch=yaw=null;
-    roll=new GyroSound(applet, vrfiltered, unrfiltered, dtermroll, "roll", int(rate)*1000);
-    pitch=new GyroSound(applet, vpfiltered, unpfiltered, dtermpitch, "pitch", int(rate)*1000);
-    yaw=new GyroSound(applet, vyfiltered, unyfiltered, dtermyaw, "yaw", int(rate)*1000);
+    roll=new GyroSound(applet, vrfiltered, unrfiltered, dtermroll, "roll", int(rate));
+    pitch=new GyroSound(applet, vpfiltered, unpfiltered, dtermpitch, "pitch", int(rate));
+    yaw=new GyroSound(applet, vyfiltered, unyfiltered, dtermyaw, "yaw", int(rate));
   }else{
     roll=pitch=yaw=null;
-    roll=new GyroSound(applet,new float[]{0}, new float[]{0},new float[]{0}, "roll", int(0)*1000);
-    pitch=new GyroSound(applet, new float[]{0}, new float[]{0},new float[]{0}, "pitch", int(0)*1000);
-    yaw=new GyroSound(applet, new float[]{0}, new float[]{0}, new float[]{0}, "yaw", int(0)*1000);
+    roll=new GyroSound(applet,new float[]{0}, new float[]{0},new float[]{0}, "roll", 0);
+    pitch=new GyroSound(applet, new float[]{0}, new float[]{0},new float[]{0}, "pitch", 0);
+    yaw=new GyroSound(applet, new float[]{0}, new float[]{0}, new float[]{0}, "yaw", 0);
     }
     
   }

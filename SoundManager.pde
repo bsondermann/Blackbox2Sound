@@ -83,6 +83,7 @@ class SoundManager {
   void loadLog(File log) {
 
     table = new RamTable(log.getAbsolutePath());
+    if(table.getRowCount()>2){
     dur=Long.parseLong(table.getRow(table.getRowCount()-1).getString(1).trim())-Long.parseLong(table.getRow(1).getString(1).trim());
     rate = Math.round(table.getRowCount()/(dur/1000000)/1000);
     int[]indexes = new int[8];
@@ -138,6 +139,13 @@ class SoundManager {
     roll=new GyroSound(applet, vrfiltered, unrfiltered, dtermroll, "roll", int(rate)*1000);
     pitch=new GyroSound(applet, vpfiltered, unpfiltered, dtermpitch, "pitch", int(rate)*1000);
     yaw=new GyroSound(applet, vyfiltered, unyfiltered, dtermyaw, "yaw", int(rate)*1000);
+  }else{
+    roll=pitch=yaw=null;
+    roll=new GyroSound(applet,new float[]{0}, new float[]{0},new float[]{0}, "roll", int(0)*1000);
+    pitch=new GyroSound(applet, new float[]{0}, new float[]{0},new float[]{0}, "pitch", int(0)*1000);
+    yaw=new GyroSound(applet, new float[]{0}, new float[]{0}, new float[]{0}, "yaw", int(0)*1000);
+    }
+    
   }
   void show() {
     if (vol>0) {

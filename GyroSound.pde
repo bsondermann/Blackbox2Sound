@@ -95,6 +95,7 @@ class GyroSound{
     
   }
   String getTimeCode(){
+    if(valFiltered.length==1){return "Logging paused, no data!";}
     String sec1="0";
     String sec2="00";
     String sec21="0:";

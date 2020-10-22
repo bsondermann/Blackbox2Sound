@@ -99,7 +99,10 @@ void draw() {
   text("   Filtered | Unfiltered",70,168);
   text("   Gyro | DTerm",70,268);
   //text("Export Sound",70,297);
-  text(sound.getTimeCode(),width/2,height-60);
+  fill(100);
+  rect(width/2,height-65,200,30);
+  fill(0);
+  text(sound.getTimeCode(),width/2,height-67);
   sound.show();
   if(sound.getPlaying()){
     if(sound.getPosition()+0.1>sound.getDuration()){
@@ -151,6 +154,7 @@ void mousePressed(){
   if(mouseX>12+50&&mouseX<28+50&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("PITCH"),"PITCH");}
   if(mouseX>12+100&&mouseX<28+100&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("YAW"),"YAW");}
   if(ls.click(mouseX,mouseY)){
+    sound.pause();
         sound.loadLog(logs[ls.getCurrentLog()]);
         filename=logs[ls.getCurrentLog()].getName().substring(0,logs[0].getName().length()-7)+" LOADED!";
       }

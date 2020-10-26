@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 import javax.sound.sampled.*;
 import java.io.*;
- 
+import java.nio.ByteBuffer;
 SoundManager sound;
 SDrop drop;
 File[] logs;
@@ -49,7 +49,7 @@ void draw() {
   stroke(0);
   
   fill(100);
-  //rect(70,300,120,25);
+  rect(70,300,120,25);
   rect(70,150,30,15);
   //FILTER CHECK BOX
   fill(255,0,0);
@@ -98,7 +98,7 @@ void draw() {
   text("R | P | Y",width-85,35);
   text("   Filtered | Unfiltered",70,168);
   text("   Gyro | DTerm",70,268);
-  //text("Export Sound",70,297);
+  text("Export Sound",70,297);
   fill(100);
   rect(width/2,height-65,200,30);
   fill(0);
@@ -148,7 +148,7 @@ void mousePressed(){
     sound.setGyro(!sound.getGyro());
   }
   if(mouseX>10&&mouseX<130&&mouseY>288&&mouseY<312){
-    //sound.exportSound();
+    sound.exportSound(sketchPath()+"/export/");
   }
   if(mouseX>12&&mouseX<28&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("ROLL"),"ROLL");}
   if(mouseX>12+50&&mouseX<28+50&&mouseY>192&&mouseY<208){sound.setActive(!sound.getActive("PITCH"),"PITCH");}

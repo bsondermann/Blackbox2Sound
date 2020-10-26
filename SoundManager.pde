@@ -205,39 +205,11 @@ class SoundManager {
   boolean getGyro() {
     return roll.getGyro();
   }
-  /*void exportSound() {
-    float[] f = new float[roll.getSamples()[0].frames()];
-    roll.getSamples()[0].read(f);
-    exportFile(f);
+  void exportSound(String path) {
+    new File(path).mkdir();
+    roll.saveAudio(path);
+    pitch.saveAudio(path);
+    yaw.saveAudio(path);
   }
-  void exportFile(float[]data) {
-    float max=0;
-    float min=0;
-    for (int i = 0; i< data.length; i++) {
-      if (data[i]>max) {
-        max=data[i];
-      }
-      if (data[i]<min) {
-        min=data[i];
-      }
-    }
-    byte[] export = new byte[data.length];
-    for (int i = 0; i<data.length; i++) {
-      export[i] = (byte)map(data[i], min, max, -127, 127);
-    }
-    AudioFormat frmt = new AudioFormat(int(rate)*1000, 8, 1, true, true);
-    AudioInputStream ais = new AudioInputStream(
-      new ByteArrayInputStream(export), frmt, 
-      export.length / frmt.getFrameSize()
-      );
-
-    try {
-      AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new
-        File(sketchPath() + "/test.wav")
-        );
-    } 
-    catch(Exception e) {
-      e.printStackTrace();
-    }
-  }*/
+ 
 }

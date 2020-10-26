@@ -4,20 +4,14 @@ class GyroSound{
   private float[] valFiltered,valUnfiltered,dtermval;
   private String name;
   private AudioSample hpfFiltered,hpfUnfiltered,dterm;
-  private HighPass hpFiltered, hpUnfiltered,hpfDterm;
   private int sampleRate;
   private int cutoff=150;
   private boolean filterActive=false;
   private boolean active=true;
   private boolean gyroactive=true;
+  private int sampleRateExport=44100;
   GyroSound(PApplet applet,float[] f,float[]u,float[]d, String name, int sampleRate){
     this.applet = applet;
-    /*float maxf=0.0;
-    float maxu=0.0;
-    for(int i = 0; i< f.length;i++){
-      if(f[i]>maxf){maxf=f[i];}
-      if(u[i]>maxu){maxu=u[i];}
-    }*/
     valFiltered=new float[f.length];
     valUnfiltered=new float[u.length];
     dtermval = new float[d.length];
@@ -29,16 +23,15 @@ class GyroSound{
     }
     this.name = name;
     this.sampleRate = sampleRate;
+    valFiltered = hpf(valFiltered,10);
+    valUnfiltered = hpf(valUnfiltered,10);
+    dtermval = hpf(dtermval,10);
     
-    hpfFiltered = new AudioSample(this.applet,this.valFiltered,this.sampleRate);
-    hpfUnfiltered = new AudioSample(this.applet,this.valUnfiltered,this.sampleRate);
-    dterm = new AudioSample(this.applet,this.dtermval,this.sampleRate);
-    hpFiltered = new HighPass(this.applet);
-    hpFiltered.process(hpfFiltered,this.cutoff);
-    hpUnfiltered = new HighPass(this.applet);
-    hpUnfiltered.process(hpfUnfiltered,this.cutoff);
-    hpfDterm = new HighPass(this.applet);
-    hpfDterm.process(dterm,this.cutoff);
+    hpfFiltered = new AudioSample(this.applet,valFiltered,this.sampleRate);
+    hpfUnfiltered = new AudioSample(this.applet,valUnfiltered,this.sampleRate);
+    dterm = new AudioSample(this.applet,dtermval,this.sampleRate);
+   // new File(sketchPath()+"/export/").mkdir();
+    //saveAudio(sketchPath()+"/export/");
     
     rmsu = new Amplitude(applet);
     rmsu.input(hpfUnfiltered);
@@ -48,13 +41,7 @@ class GyroSound{
     rmsd.input(dterm);
     mute();
   }
-  AudioSample[] getSamples(){
-    AudioSample[]ret = new AudioSample[3];
-    ret[0]=hpfFiltered;
-    ret[1]=hpfUnfiltered;
-    ret[2]=dterm;
-    return ret;
-  }
+
   void jump(float t){
 
     hpfFiltered.jump(t);
@@ -144,6 +131,95 @@ class GyroSound{
   }
   void setGyro(boolean gyromode){gyroactive = gyromode;mute();unmute();}
   boolean getGyro(){return this.gyroactive;}
+  float[] lpf(float[]array,float factor){
+  factor = max(1,factor);
+  float val = array[0];
+  float[] ret = new float[array.length];
+  System.arraycopy(array,0,ret,0,array.length-1);
+  for(int i = 0; i<array.length;i++){
+    float currentValue = ret[i];
+    val +=((currentValue - val))/factor;
+    ret[i] = val;
+  }
+  return ret;
+}
+float[] hpf(float[]array,float factor){
+  factor = max(1,factor);
+  float val = array[0];
+  float[] ret = new float[array.length];
+  float[] lpf = lpf(array,factor);
+  System.arraycopy(array,0,ret,0,array.length-1);
+  for(int i = 0; i< array.length; i++){
+    ret[i]-=lpf[i];
+  }
+  return ret;
+}
+double[][] float2double(float[]in){
+  double[][]ret = new double[1][(int)(float(in.length)*(sampleRateExport/rate))];
+  float maxval=0;
+  for(int i = 0; i< in.length; i++){
+    maxval=max(abs(in[i]),maxval);
+  }
+  for(int i = 0; i< ret[0].length; i++){
+    ret[0][i] = map(in[(int)(float(i)*(rate/sampleRateExport))],-maxval,maxval,-1,1);
+  }
+  return ret;
+}
+void saveAudio(String path){ 
+  String fullpath=path+"/"+name;
+  new File(fullpath).mkdir();
+  
+  try{
+        long numFrames = (long)(valUnfiltered.length*(sampleRateExport/rate));
+    WavFile wavFile = WavFile.newWavFile(new File(fullpath+"/filtered.wav"),1,numFrames,32,sampleRateExport);
+
+    long frameCounter = 0; 
+    
+     double[][] buffer = float2double(valFiltered);
+
+
+            // Write the buffer
+            wavFile.writeFrames(buffer, (int)numFrames);
+         
+
+         // Close the wavFile
+         wavFile.close();
+  }catch(Exception e){e.printStackTrace();}
+  
+  try{
+        long numFrames = (long)(valUnfiltered.length*(sampleRateExport/rate));
+    WavFile wavFile = WavFile.newWavFile(new File(fullpath+"/unfiltered.wav"),1,numFrames,32,sampleRateExport);
+
+    long frameCounter = 0; 
+    
+     double[][] buffer = float2double(valUnfiltered);
+
+
+            // Write the buffer
+            wavFile.writeFrames(buffer, (int)numFrames);
+         
+
+         // Close the wavFile
+         wavFile.close();
+  }catch(Exception e){e.printStackTrace();}
+  if(!name.equals("yaw")){
+  try{
+        long numFrames = (long)(valUnfiltered.length*(sampleRateExport/rate));
+    WavFile wavFile = WavFile.newWavFile(new File(fullpath+"/dterm.wav"),1,numFrames,32,sampleRateExport);
+
+    long frameCounter = 0; 
+    
+     double[][] buffer = float2double(dtermval);
+
+
+            // Write the buffer
+            wavFile.writeFrames(buffer, (int)numFrames);
+         
+
+         // Close the wavFile
+         wavFile.close();
+    }catch(Exception e){e.printStackTrace();}
+  }}
 }
 
 

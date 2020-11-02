@@ -3,7 +3,7 @@ class SoundManager {
   Spectrum spectrum;
   PApplet applet;
   RamTable table;
-
+  int samplesize=256;
   LevelMeter meterRoll, meterPitch, meterYaw;
   SoundManager(PApplet applet) {
     this.applet = applet;
@@ -13,6 +13,7 @@ class SoundManager {
     meterPitch = new LevelMeter(width-90, 50, height-100, 10);
 
     meterYaw = new LevelMeter(width-70, 50, height-100, 10);
+    spectrum = new Spectrum(samplesize,3,340,175);
   }
   boolean getFilterActive() {
     return roll.getFilterActive();
@@ -41,12 +42,12 @@ class SoundManager {
     pitch.unmute();
     yaw.unmute();
   }
-  void toggleFiltered() {
-    roll.setFilterActive(!roll.getFilterActive());
+  void setFiltered(boolean f) {
+    roll.setFilterActive(f);
 
-    pitch.setFilterActive(!pitch.getFilterActive());
+    pitch.setFilterActive(f);
 
-    yaw.setFilterActive(!yaw.getFilterActive());
+    yaw.setFilterActive(f);
   }
   String getTimeCode() {
     return roll.getTimeCode();
@@ -167,6 +168,22 @@ class SoundManager {
       meterYaw.setLevel(0);
     }
     meterYaw.show();
+    if(yaw.getPlaying()){
+      updateSpectrum();
+    }
+    spectrum.show();
+    
+  }
+  void updateSpectrum(){
+    float[] data = new float[samplesize];
+    float[]droll = roll.getFrame(samplesize);
+    float[]dpitch = pitch.getFrame(samplesize);
+    float[]dyaw = yaw.getFrame(samplesize);
+    
+    for(int i = 0; i<data.length; i++){
+      data[i]= droll[i]+dpitch[i]+dyaw[i];
+    }
+    spectrum.update(data);
   }
   boolean getActive(String axis) { 
     if (roll!=null&&pitch!=null&&yaw!=null) {

@@ -161,7 +161,7 @@ double[][] float2double(float[]in){
     maxval=max(abs(in[i]),maxval);
   }
   for(int i = 0; i< ret[0].length; i++){
-    ret[0][i] = map(in[(int)(float(i)*(rate/sampleRateExport))],-maxval,maxval,-1,1);
+    ret[0][i] = map(in[constrain((int)(float(i)*(rate/sampleRateExport)),0,in.length-1)],-maxval,maxval,-1,1);
   }
   return ret;
 }
@@ -220,6 +220,25 @@ void saveAudio(String path){
          wavFile.close();
     }catch(Exception e){e.printStackTrace();}
   }}
+  float[] getFrame(int buflength){
+    float[]ret = new float[buflength];
+    for(int i = 0; i< buflength;i++){
+      if(active){
+        if(gyroactive){
+          if(filterActive){
+          ret[i]=valFiltered[(int)min(i+(getPosition()*rate),valFiltered.length-1)];
+        }else{      
+          ret[i]=valUnfiltered[(int)min(i+(getPosition()*rate),valUnfiltered.length-1)];
+        }
+      }else{
+        
+        ret[i]=dtermval[(int)min(i+(getPosition()*rate),dtermval.length-1)];
+      }
+      }else{ret[i]=0;}
+    }
+  
+  return ret;
+  }
 }
 
 
